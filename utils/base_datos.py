@@ -42,6 +42,13 @@ def configurada():
 
 
 def tienda_id():
+    """
+    Tienda con la que se trabaja: la del usuario que inició sesión (guardada en
+    su sesión al entrar) o, sin inicio de sesión, la indicada en secrets.toml.
+    """
+    from streamlit import runtime
+    if runtime.exists() and st.session_state.get("tienda_id") is not None:
+        return int(st.session_state["tienda_id"])
     return int((configuracion() or {}).get("tienda_id", 1))
 
 
@@ -69,6 +76,17 @@ def _armar_url(texto):
 def motor():
     """Conexión reutilizable con la base de datos (se crea una sola vez)."""
     return create_engine(_armar_url(configuracion()["url"]), pool_pre_ping=True, pool_size=2, max_overflow=2)
+
+
+def buscar_usuario(email):
+    """Busca un correo en la tabla 'usuarios'. Devuelve sus datos y su tienda, o None."""
+    consulta = text("""
+        select u.email, u.nombre, u.rol, u.activo, u.tienda_id, t.nombre as tienda
+        from usuarios u join tiendas t on t.id = u.tienda_id
+        where u.email = :e""")
+    with motor().connect() as conexion:
+        fila = conexion.execute(consulta, {"e": email.strip().lower()}).mappings().first()
+    return dict(fila) if fila else None
 
 
 def leer_tienda(id_tienda):

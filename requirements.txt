@@ -1,5 +1,5 @@
 # Versiones exactas probadas con Python 3.13 (así el servidor instala lo mismo que tu computadora)
-streamlit==1.67.0
+streamlit[auth]==1.67.0
 pandas==3.1.1
 numpy==2.5.5
 scikit-learn==1.9.1
@@ -10,3 +10,6 @@ joblib==1.6.0
 # Base de datos (Fase A)
 sqlalchemy==2.1.9
 psycopg[binary]==3.3.9
+# Inicio de sesión con Google (Fase B)
+Authlib==1.9.9
+httpx==0.28.1

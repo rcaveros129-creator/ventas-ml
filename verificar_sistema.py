@@ -175,13 +175,42 @@ def _():
 @revisar("10. Interfaz: las 8 secciones se abren sin errores")
 def _():
     from streamlit.testing.v1 import AppTest
-    app = AppTest.from_file("app.py", default_timeout=300).run()
+    from utils import autenticacion
+    app = AppTest.from_file("app.py", default_timeout=300)
+    if autenticacion.login_configurado():
+        # Se simula el ingreso de un administrador registrado en la tabla 'usuarios'
+        from sqlalchemy import text
+        from utils import base_datos
+        with base_datos.motor().connect() as conexion:
+            email = conexion.execute(text(
+                "select email from usuarios where activo and rol = 'administrador' limit 1")).scalar()
+        assert email, "No hay ningún administrador activo en la tabla 'usuarios'"
+        app.user.clear()
+        app.user.update({"is_logged_in": True, "email": email})
+    app.run()
     assert not app.exception, app.exception[0].value
+    assert app.sidebar.radio, "La app no mostró el menú (¿se detuvo en el inicio de sesión?)"
     menu = app.sidebar.radio[0]
     for seccion in menu.options:
         menu.set_value(seccion).run()
         assert not app.exception, f"{seccion}: {app.exception[0].value}"
     return f"{len(menu.options)} secciones revisadas"
+
+
+@revisar("11. Inicio de sesión y permisos")
+def _():
+    from utils import autenticacion
+    if not autenticacion.login_configurado():
+        return "sin inicio de sesión configurado (modo práctica): se omite"
+    from streamlit.testing.v1 import AppTest
+    app = AppTest.from_file("app.py", default_timeout=120)
+    app.user.clear()
+    app.run()
+    assert not app.sidebar.radio, "Sin iniciar sesión se pudo ver el menú"
+    assert any("Google" in b.label for b in app.button), "No aparece el botón de inicio de sesión"
+    _, error = autenticacion.resolver_acceso("correo-que-no-existe-123@ejemplo.com")
+    assert error, "Un correo no registrado pudo entrar"
+    return "sin sesión → pantalla de ingreso ✓; correo no registrado → sin acceso ✓"
 
 
 print("=" * 70)

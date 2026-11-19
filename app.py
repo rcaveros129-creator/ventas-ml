@@ -11,6 +11,7 @@ import streamlit as st
 
 from modules import (abastecimiento, dashboard, inventario, prediccion, productos, reportes, rotacion,
                      ventas)
+from utils.autenticacion import controlar_acceso, mostrar_usuario
 from utils.componentes import evitar_traduccion, fuente, origen
 from utils.data_loader import cargar_datos
 
@@ -35,6 +36,12 @@ SECCIONES = {
     "🛒 Abastecimiento inteligente": abastecimiento,
     "📑 Reportes": reportes,
 }
+
+# ------------------------------------------------------------------
+# Inicio de sesión: si la persona no puede entrar, la app se detiene aquí
+# ------------------------------------------------------------------
+evitar_traduccion()
+contexto = controlar_acceso()
 
 # ------------------------------------------------------------------
 # Menú lateral
@@ -92,8 +99,7 @@ filtros = {"fecha_inicio": fecha_inicio, "fecha_fin": fecha_fin,
 
 st.sidebar.divider()
 st.sidebar.caption(f"{'⚠️' if datos['ficticios'] else '📁'} {fuente(datos)}  \n🗄️ {origen(datos)}")
-with st.sidebar:
-    evitar_traduccion()
+mostrar_usuario(contexto)
 
 # ------------------------------------------------------------------
 # Mostrar la sección elegida

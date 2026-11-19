@@ -10,6 +10,7 @@ from modules.inventario import obtener_tabla
 from modules.rotacion import ICONOS as ICONOS_ROTACION
 from modules.rotacion import ejecutar_modelo
 from utils import importacion
+from utils.autenticacion import puede_editar
 from utils.abastecimiento import ACCIONES, recomendar
 from utils.componentes import (AZUL, GRIS_GRILLA, etiqueta_estado, estilo_grafico, formato_soles, tarjeta)
 from utils.ml_demanda import HORIZONTES
@@ -150,6 +151,10 @@ def mostrar_ficha(datos, filtros, integrado):
 
 
 def mostrar_importacion(datos):
+    if not puede_editar():
+        st.info("🔒 Tu rol (**empleado**) permite ver los datos, pero no importarlos ni reemplazarlos. "
+                "Pídeselo al dueño de la tienda.")
+        return
     destino = ("la **base de datos** (solo los de tu tienda)" if importacion.base_datos.configurada()
                else "la carpeta **data** de tu computadora")
     st.markdown(f"Sube tus propios archivos **CSV o Excel** para reemplazar los datos actuales en {destino}. "
